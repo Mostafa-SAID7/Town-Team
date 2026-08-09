@@ -2,7 +2,6 @@ export type Product = { name: string; type: string; price: string; badge: string
 
 export const navigation = [
   { label: 'Collections', href: '#collections' },
-  { label: 'Shop', href: '#shop' },
   { label: 'Story', href: '#story' },
   { label: 'Community', href: '#community' },
 ]

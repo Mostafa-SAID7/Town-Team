@@ -21,30 +21,46 @@ export function SiteHeader({ cart, wishlist, darkMode, onToggleTheme, onOpenSear
   const [activeSection, setActiveSection] = useState('#top')
 
   useEffect(() => {
-    const sections = navigation
+    const sectionElements = navigation
       .map((item) => ({ href: item.href, element: document.querySelector(item.href) }))
       .filter((item): item is { href: string; element: Element } => Boolean(item.element))
 
-    if (!sections.length) return
+    if (!sectionElements.length) return
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        let nextActive = activeSection
-        
-        entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
-            nextActive = `#${entry.target.id}`
+    const handleIntersect = (entries: IntersectionObserverEntry[]) => {
+      // Separate entries into intersecting and non-intersecting
+      const intersecting = entries.filter((entry) => entry.isIntersecting)
+      const nonIntersecting = entries.filter((entry) => !entry.isIntersecting)
+
+      if (intersecting.length > 0) {
+        // If multiple sections are visible, pick the one with highest ratio
+        const mostVisible = intersecting.reduce((max, entry) =>
+          entry.intersectionRatio > max.intersectionRatio ? entry : max
+        )
+        setActiveSection(`#${mostVisible.target.id}`)
+      } else if (nonIntersecting.length > 0) {
+        // Fallback: find the section closest to viewport
+        const closest = nonIntersecting.reduce((prev, current) =>
+          Math.abs(current.boundingClientRect.top) < Math.abs(prev.boundingClientRect.top)
+            ? current
+            : prev
+        )
+        if (closest.boundingClientRect.top > 0) {
+          // Section is below viewport, use the previous section
+          const index = entries.findIndex((e) => e.target.id === closest.target.id)
+          if (index > 0) {
+            setActiveSection(`#${entries[index - 1].target.id}`)
           }
-        })
-        
-        if (nextActive !== activeSection) {
-          setActiveSection(nextActive)
         }
-      },
-      { rootMargin: '-80px 0px -66% 0px', threshold: [0.1, 0.5] },
-    )
+      }
+    }
 
-    sections.forEach(({ element }) => observer.observe(element))
+    const observer = new IntersectionObserver(handleIntersect, {
+      rootMargin: '-64px 0px -50% 0px',
+      threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
+    })
+
+    sectionElements.forEach(({ element }) => observer.observe(element))
     return () => observer.disconnect()
   }, [])
 
