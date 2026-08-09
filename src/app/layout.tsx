@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Bebas_Neue, Geist, Geist_Mono } from 'next/font/google'
+import { ToastProvider } from '@/components/ui/toaster'
 import './globals.css'
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-geist' })
@@ -44,5 +45,14 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { colorScheme: 'light dark', themeColor: [{ media: '(prefers-color-scheme: light)', color: '#f7f4ec' }, { media: '(prefers-color-scheme: dark)', color: '#151515' }] }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en" className="bg-background"><body className={`${geist.variable} ${geistMono.variable} ${display.variable} antialiased`}>{children}{process.env.NODE_ENV === 'production' && <Analytics />}</body></html>
+  return (
+    <html lang="en" className="bg-background">
+      <body className={`${geist.variable} ${geistMono.variable} ${display.variable} antialiased`}>
+        <ToastProvider>
+          {children}
+          {process.env.NODE_ENV === 'production' && <Analytics />}
+        </ToastProvider>
+      </body>
+    </html>
+  )
 }
