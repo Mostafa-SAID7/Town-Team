@@ -30,6 +30,7 @@ jobs:
   create-release:
     name: Create Release & Version
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'chore(release)')"
     outputs:
       version: ${{ steps.version.outputs.version }}
       changelog: ${{ steps.changelog.outputs.changelog }}
@@ -136,8 +137,7 @@ jobs:
 
       - name: Push changes and tags
         run: |
-          git push origin main || echo "No new commits to push"
-          git push origin --tags
+          git push origin main --follow-tags || true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
