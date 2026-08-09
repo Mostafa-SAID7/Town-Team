@@ -79,6 +79,13 @@ jobs:
           esac
           
           NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          
+          # Check if tag already exists and increment if needed
+          while git rev-parse "v$NEW_VERSION" >/dev/null 2>&1; do
+            PATCH=$((PATCH + 1))
+            NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          done
+          
           echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
           echo "New version: $NEW_VERSION"
 
@@ -131,6 +138,11 @@ jobs:
       - name: Create git tag
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+          # Check if tag already exists and delete it first
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "Tag v$VERSION already exists locally, deleting..."
+            git tag -d "v$VERSION"
+          fi
           git tag -a "v$VERSION" -m "Release version $VERSION"
           echo "Git tag created: v$VERSION"
 
