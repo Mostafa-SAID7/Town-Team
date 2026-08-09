@@ -93,6 +93,24 @@ button, a, input, textarea, select { transition: color 180ms ease, background-co
 .site-shell .bg-secondary { background-color: var(--secondary) !important; }
 .site-shell .text-secondary-foreground { color: var(--secondary-foreground) !important; }
 .site-shell.theme-switching, .site-shell.theme-switching * { transition-duration: 420ms; }
+.motion-page { animation: page-enter 720ms cubic-bezier(.22, 1, .36, 1) both; }
+.motion-reveal { animation: reveal-up 720ms cubic-bezier(.22, 1, .36, 1) both; animation-delay: var(--motion-delay, 0ms); }
+.motion-card { transition: transform 300ms cubic-bezier(.22, 1, .36, 1), box-shadow 300ms ease, border-color 180ms ease; }
+.motion-card:hover { transform: translateY(-6px); box-shadow: 0 18px 36px color-mix(in srgb, var(--foreground) 12%, transparent); }
+.motion-image { transition: transform 700ms cubic-bezier(.22, 1, .36, 1), filter 500ms ease; }
+.motion-card:hover .motion-image { transform: scale(1.035); filter: saturate(1.08); }
+.motion-button:hover { transform: translateY(-2px); }
+.motion-button:active { transform: translateY(0) scale(.98); }
+.motion-ticker { animation: ticker-slide 28s linear infinite; width: max-content; }
+.motion-overlay { animation: overlay-fade 240ms ease both; }
+.motion-drawer { animation: drawer-slide 420ms cubic-bezier(.22, 1, .36, 1) both; }
+.motion-menu { animation: menu-drop 300ms cubic-bezier(.22, 1, .36, 1) both; transform-origin: top; }
+@keyframes page-enter { from { opacity: 0; } to { opacity: 1; } }
+@keyframes reveal-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes overlay-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes drawer-slide { from { opacity: .7; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes menu-drop { from { opacity: 0; transform: translateY(-10px) scaleY(.98); } to { opacity: 1; transform: translateY(0) scaleY(1); } }
+@keyframes ticker-slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .site-loading { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--background); color: var(--foreground); }
 .site-loading__mark { display: flex; flex-direction: column; align-items: center; gap: 1rem; animation: loading-enter 600ms ease both; }
 .site-loading__diamond { color: var(--primary); font-size: 2.5rem; animation: loading-pulse 900ms ease-in-out infinite alternate; }
