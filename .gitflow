@@ -1,0 +1,82 @@
+# Git Flow Configuration for Town Team Landing Page
+# This file defines the Git Flow branching model for this repository
+# 
+# Git Flow Overview:
+# - main: Production-ready code (stable releases)
+# - develop: Integration branch for features
+# - feature/*: Individual feature branches (from develop)
+# - release/*: Release preparation branches (from develop)
+# - hotfix/*: Emergency fixes (from main)
+
+# Branch naming conventions
+[branch "main"]
+    # Main branch configuration
+    # Purpose: Production releases
+    # Protection: Required PR reviews, passing CI/CD
+    # Merge from: release branches, hotfix branches
+    description = Production branch - only stable, release-ready code
+
+[branch "develop"]
+    # Development branch configuration
+    # Purpose: Integration branch for features
+    # Protection: Required PR reviews, passing CI/CD
+    # Merge from: feature branches, release branches
+    description = Development branch - integration of features
+
+# Feature branch pattern: feature/*
+# Examples: feature/new-header, feature/dark-mode, feature/user-auth
+[branch "feature"]
+    pattern = feature/*
+    description = Feature branches for new functionality
+    merge-target = develop
+    delete-after-merge = true
+
+# Release branch pattern: release/*
+# Examples: release/1.0.0, release/1.1.0
+[branch "release"]
+    pattern = release/*
+    description = Release preparation branches
+    merge-target-main = main
+    merge-target-develop = develop
+    delete-after-merge = true
+
+# Hotfix branch pattern: hotfix/*
+# Examples: hotfix/critical-bug, hotfix/security-patch
+[branch "hotfix"]
+    pattern = hotfix/*
+    description = Emergency hotfixes for production
+    merge-target = main
+    merge-target-develop = develop
+    delete-after-merge = true
+
+# Bugfix branch pattern: bugfix/*
+# Examples: bugfix/form-validation, bugfix/image-loading
+[branch "bugfix"]
+    pattern = bugfix/*
+    description = Bug fixes (non-critical)
+    merge-target = develop
+    delete-after-merge = true
+
+# Documentation branch pattern: docs/*
+# Examples: docs/api-reference, docs/deployment-guide
+[branch "docs"]
+    pattern = docs/*
+    description = Documentation updates
+    merge-target = develop
+    delete-after-merge = true
+
+# Chore branch pattern: chore/*
+# Examples: chore/update-deps, chore/eslint-config
+[branch "chore"]
+    pattern = chore/*
+    description = Maintenance and configuration
+    merge-target = develop
+    delete-after-merge = true
+
+# Infrastructure branch pattern: infra/*
+# Examples: infra/github-actions, infra/docker-setup
+[branch "infra"]
+    pattern = infra/*
+    description = Infrastructure and DevOps
+    merge-target = develop
+    delete-after-merge = true
