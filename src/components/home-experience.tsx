@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, Heart, Minus, Plus, Search, ShoppingBag } from 'lucide-react'
+import { ArrowRight, Heart, Minus, Plus, Search, ShoppingBag, X } from 'lucide-react'
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
