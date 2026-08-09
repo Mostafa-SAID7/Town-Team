@@ -63,7 +63,7 @@ jobs:
   e2e-tests:
     name: End-to-End Tests
     runs-on: ubuntu-latest
-    if: hashFiles('playwright.config.ts', 'cypress.config.ts') != ''
+    if: false  # Disabled - no E2E config files present
 
     steps:
       - name: Checkout code
