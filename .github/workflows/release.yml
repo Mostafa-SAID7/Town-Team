@@ -12,9 +12,6 @@ on:
       - '.github/workflows/security-scanning.yml'
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to release (e.g., 1.0.0)'
-        required: false
       release_type:
         description: 'Release type'
         required: true
