@@ -40,12 +40,12 @@ export default function Error({
             <RotateCcw className="mr-2 size-4" />
             Try again
           </Button>
-          <Button variant="outline" asChild className="w-full">
-            <Link href="/">
+          <Link href="/" className="w-full">
+            <Button variant="outline" className="w-full">
               <Home className="mr-2 size-4" />
               Back home
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </div>
       </div>
     </main>
