@@ -1,3 +1,15 @@
+## [0.1.1] - 2026-08-09
+
+### Added
+- Add new features here
+
+### Fixed
+- Fix bugs here
+
+### Changed
+- Changes go here
+
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
