@@ -11,6 +11,10 @@ on:
       - '.github/workflows/code-quality.yml'
       - '.github/workflows/security-scanning.yml'
   workflow_dispatch:
+
+concurrency:
+  group: release
+  cancel-in-progress: true
     inputs:
       version:
         description: 'Version to release (e.g., 1.0.0)'
@@ -33,6 +37,7 @@ jobs:
   create-release:
     name: Create Release & Tags
     runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, 'chore(release)') && !contains(github.event.head_commit.message, 'chore: release') }}
     outputs:
       version: ${{ steps.version.outputs.version }}
       changelog: ${{ steps.changelog.outputs.changelog }}
@@ -186,7 +191,7 @@ jobs:
     name: Release Notification
     runs-on: ubuntu-latest
     needs: create-release
-    if: success()
+    if: always() && needs.create-release.result == 'success'
 
     steps:
       - name: Log Release Summary
