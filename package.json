@@ -1,6 +1,9 @@
 {
-  "name": "my-project",
+  "name": "town-team-landing",
   "version": "0.1.0",
+  "description": "Modern landing page for Town Team",
+  "author": "Mostafa SAID",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "dev": "next dev",
