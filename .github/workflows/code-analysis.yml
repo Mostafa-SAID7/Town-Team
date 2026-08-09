@@ -1,0 +1,171 @@
+name: Code Analysis
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run monthly on the first day
+    - cron: '0 0 1 * *'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # Advanced code analysis - consolidated from code-quality.yml
+  code-analysis:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Detect dead code
+        run: |
+          npm install -g unimported
+          unimported --all src/ || true
+        continue-on-error: true
+
+      - name: Check for console logs in production code
+        run: |
+          echo "## Console Logs Check" >> $GITHUB_STEP_SUMMARY
+          grep -r "console\." src/app src/components src/lib --include="*.ts" --include="*.tsx" >> $GITHUB_STEP_SUMMARY || echo "✓ No console logs found" >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+
+      - name: Find TODO/FIXME comments
+        run: |
+          echo "## TODO/FIXME Comments" >> $GITHUB_STEP_SUMMARY
+          grep -r "TODO\|FIXME" src/ --include="*.ts" --include="*.tsx" -n >> $GITHUB_STEP_SUMMARY || echo "✓ No TODO/FIXME comments" >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+
+      - name: Check code duplication
+        run: |
+          npm install -g jscpd
+          jscpd src/ --reporters json --output-file duplication-report.json || true
+          echo "## Code Duplication Report" >> $GITHUB_STEP_SUMMARY
+          if [ -f duplication-report.json ]; then
+            cat duplication-report.json >> $GITHUB_STEP_SUMMARY
+          fi
+        continue-on-error: true
+
+      - name: Upload duplication report
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-analysis-reports
+          path: duplication-report.json
+          retention-days: 30
+        continue-on-error: true
+
+  # Dependency analysis
+  dependency-analysis:
+    name: Dependency Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for outdated packages
+        run: |
+          echo "## Outdated Dependencies" >> $GITHUB_STEP_SUMMARY
+          pnpm outdated >> $GITHUB_STEP_SUMMARY || echo "✓ All dependencies up to date" >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+
+  # Bundle size analysis
+  bundle-analysis:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Analyze bundle size
+        run: |
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          du -sh .next/ >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Largest files:" >> $GITHUB_STEP_SUMMARY
+          find .next -type f -name "*.js" | xargs ls -lh | tail -10 >> $GITHUB_STEP_SUMMARY || true
+        continue-on-error: true
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis
+          path: .next/
+          retention-days: 7
+        continue-on-error: true
+
+  # Analysis summary
+  analysis-summary:
+    name: Analysis Summary
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [code-analysis, dependency-analysis, bundle-analysis]
+
+    steps:
+      - name: Generate analysis summary
+        run: |
+          echo "## 📊 Code Analysis Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Analyses Run" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Dead Code Detection" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Console Log Detection" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ TODO/FIXME Comments" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Code Duplication" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Dependency Audit" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Note:** These are informational checks. Failures here do not block PRs."
