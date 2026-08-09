@@ -18,6 +18,28 @@ type SiteHeaderProps = {
 
 export function SiteHeader({ cart, wishlist, darkMode, onToggleTheme, onOpenSearch, onOpenWishlist, onOpenCart }: SiteHeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState('#top')
+
+  useEffect(() => {
+    const sections = [...new Set(navigation.map((item) => item.href))]
+      .map((href) => document.querySelector(href))
+      .filter((section): section is Element => Boolean(section))
+
+    if (!sections.length) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleSections = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+        if (visibleSections[0]?.target.id) setActiveSection(`#${visibleSections[0].target.id}`)
+      },
+      { rootMargin: '-20% 0px -58% 0px', threshold: [0, 0.2, 0.5, 1] },
+    )
+
+    sections.forEach((section) => observer.observe(section))
+    return () => observer.disconnect()
+  }, [])
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : ''
@@ -33,7 +55,7 @@ export function SiteHeader({ cart, wishlist, darkMode, onToggleTheme, onOpenSear
           <span className="mr-1 text-primary sm:mr-2">◆</span>Town Team
         </Link>
         <nav className="hidden items-center gap-8 text-xs font-semibold uppercase tracking-[0.16em] md:flex" aria-label="Main navigation">
-          {navigation.map((item) => <Link key={item.label} href={item.href} className="transition-colors hover:text-primary">{item.label}</Link>)}
+          {navigation.map((item) => { const isActive = activeSection === item.href; return <Link key={item.label} href={item.href} aria-current={isActive ? 'location' : undefined} className={`relative transition-colors hover:text-primary${isActive ? ' text-primary after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-0.5 after:bg-primary' : ''}`}>{item.label}</Link> })}
         </nav>
         <div className="flex items-center gap-0.5 sm:gap-1">
           <div className="hidden items-center gap-0.5 sm:flex">
@@ -45,7 +67,7 @@ export function SiteHeader({ cart, wishlist, darkMode, onToggleTheme, onOpenSear
           <Button variant="ghost" size="icon" className="md:hidden text-background hover:bg-background/10 hover:text-primary" onClick={() => setMenuOpen((open) => !open)} aria-expanded={menuOpen} aria-controls="mobile-navigation" aria-label={menuOpen ? 'Close navigation menu' : 'Open navigation menu'}>{menuOpen ? <X /> : <Menu />}</Button>
         </div>
       </div>
-      {menuOpen && <div id="mobile-navigation" className="motion-menu border-t border-background/20 bg-foreground px-4 pb-5 pt-3 text-background sm:px-5 md:hidden"><nav className="flex flex-col" aria-label="Mobile navigation">{navigation.map((item) => <Link key={item.label} href={item.href} onClick={closeMenu} className="border-b border-background/15 py-4 font-mono text-sm font-bold uppercase tracking-[0.14em] hover:text-primary">{item.label}</Link>)}</nav><div className="grid grid-cols-2 gap-2 pt-4"><Button variant="secondary" className="justify-start gap-2 bg-background/10 text-background hover:bg-background/20" onClick={() => { closeMenu(); onOpenSearch() }}><Search />Search</Button><Button variant="secondary" className="justify-start gap-2 bg-background/10 text-background hover:bg-background/20" onClick={() => { closeMenu(); onOpenWishlist() }}><Heart />Wishlist {wishlist > 0 && `(${wishlist})`}</Button></div></div>}
+      {menuOpen && <div id="mobile-navigation" className="motion-menu border-t border-background/20 bg-foreground px-4 pb-5 pt-3 text-background sm:px-5 md:hidden"><nav className="flex flex-col" aria-label="Mobile navigation">{navigation.map((item) => { const isActive = activeSection === item.href; return <Link key={item.label} href={item.href} onClick={closeMenu} aria-current={isActive ? 'location' : undefined} className={`border-b border-background/15 py-4 font-mono text-sm font-bold uppercase tracking-[0.14em] hover:text-primary${isActive ? ' text-primary' : ''}`}>{item.label}</Link> })}</nav><div className="grid grid-cols-2 gap-2 pt-4"><Button variant="secondary" className="justify-start gap-2 bg-background/10 text-background hover:bg-background/20" onClick={() => { closeMenu(); onOpenSearch() }}><Search />Search</Button><Button variant="secondary" className="justify-start gap-2 bg-background/10 text-background hover:bg-background/20" onClick={() => { closeMenu(); onOpenWishlist() }}><Heart />Wishlist {wishlist > 0 && `(${wishlist})`}</Button></div></div>}
     </header>
   )
 }

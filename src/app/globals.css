@@ -131,6 +131,7 @@ body,
 }
 
 .site-shell { min-height: 100vh; overflow-x: clip; background: var(--background); color: var(--foreground); transition: background-color 420ms ease, color 420ms ease; }
+.site-shell section[id] { scroll-margin-top: 5rem; }
 .site-shell .bg-background { background-color: var(--background) !important; }
 .site-shell .bg-foreground { background-color: var(--foreground) !important; }
 .site-shell .bg-card { background-color: var(--card) !important; }
