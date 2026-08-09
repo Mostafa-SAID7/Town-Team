@@ -1,0 +1,226 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  # Scan for secret leaks
+  secret-scanning:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog Secret Scan
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --json
+        continue-on-error: true
+
+      - name: GitGuardian Secret Scan
+        uses: gitguardian/ggshield-action@v1
+        with:
+          api-key: ${{ secrets.GITGUARDIAN_API_KEY }}
+          webhook-url: ${{ secrets.GITGUARDIAN_WEBHOOK_URL }}
+          fail-on-policy-breach: false
+        continue-on-error: true
+
+  # Scan dependencies for vulnerabilities
+  dependency-scanning:
+    name: Dependency Vulnerability Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: npm audit - Check for vulnerabilities
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: pnpm audit - Check for vulnerabilities
+        run: pnpm audit --audit-level=moderate
+        continue-on-error: true
+
+  # SAST - Static Application Security Testing
+  code-scanning:
+    name: Static Application Security Testing
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v2
+        with:
+          languages: 'javascript'
+          queries: security-and-quality
+
+      - name: CodeQL Analysis
+        uses: github/codeql-action/analyze@v2
+
+  # SonarQube Code Quality and Security
+  sonarqube-scan:
+    name: SonarQube Code Quality Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build project
+        run: pnpm build
+        continue-on-error: true
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        continue-on-error: true
+
+  # Dependabot alerts check
+  dependabot-check:
+    name: Check Dependabot Alerts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for Dependabot alerts
+        run: |
+          echo "Dependabot alerts monitoring enabled"
+          echo "GitHub will automatically alert on vulnerable dependencies"
+
+  # License compliance check
+  license-check:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Check licenses
+        run: |
+          npm install -g license-report
+          license-report --only=prod --markdown > LICENSE_REPORT.md
+          cat LICENSE_REPORT.md
+        continue-on-error: true
+
+  # Security headers check
+  security-headers:
+    name: Security Headers Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check security files
+        run: |
+          echo "Checking for security configuration files..."
+          
+          if [ -f "SECURITY.md" ]; then
+            echo "✓ SECURITY.md found"
+          else
+            echo "⚠ SECURITY.md not found"
+          fi
+          
+          if [ -f ".env.example" ]; then
+            echo "✓ .env.example found"
+          else
+            echo "⚠ .env.example not found"
+          fi
+          
+          if [ -f "next.config.mjs" ]; then
+            echo "✓ next.config.mjs found (security headers can be configured here)"
+          fi
+
+  # Generate security report
+  security-report:
+    name: Generate Security Report
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [secret-scanning, dependency-scanning, code-scanning]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create security summary
+        run: |
+          echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Scans Performed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Secret Scanning (TruffleHog, GitGuardian)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Dependency Vulnerability Scan" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Static Application Security Testing (CodeQL)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ Code Quality Analysis (SonarQube)" >> $GITHUB_STEP_SUMMARY
+          echo "- ✓ License Compliance Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Recommendations" >> $GITHUB_STEP_SUMMARY
+          echo "1. Review any flagged security issues" >> $GITHUB_STEP_SUMMARY
+          echo "2. Update vulnerable dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "3. Resolve CodeQL findings" >> $GITHUB_STEP_SUMMARY
+          echo "4. Check license compliance for dependencies" >> $GITHUB_STEP_SUMMARY

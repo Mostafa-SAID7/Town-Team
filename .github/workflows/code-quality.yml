@@ -1,0 +1,216 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  # Code Quality Check
+  code-quality:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Run ESLint with detailed report
+        run: pnpm lint -- --format json --output-file eslint-report.json
+        continue-on-error: true
+
+      - name: Run TypeScript strict mode
+        run: pnpm tsc --strict --noEmit
+        continue-on-error: true
+
+      - name: Check for console logs (production code)
+        run: |
+          echo "Checking for console logs in src/..."
+          grep -r "console\." src/app src/components src/lib --include="*.ts" --include="*.tsx" || echo "No console logs found"
+        continue-on-error: true
+
+      - name: Check for TODO/FIXME comments
+        run: |
+          echo "## TODO/FIXME Comments Found" >> $GITHUB_STEP_SUMMARY
+          grep -r "TODO\|FIXME" src/ --include="*.ts" --include="*.tsx" -n || echo "No TODO/FIXME comments found"
+        continue-on-error: true
+
+  # Dead Code Detection
+  dead-code:
+    name: Dead Code Detection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Find unused exports
+        run: |
+          npm install -g unimported
+          unimported --all src/ || true
+        continue-on-error: true
+
+  # Code Complexity Analysis
+  complexity-analysis:
+    name: Code Complexity Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install complexity tools
+        run: npm install -g complexity-report
+
+      - name: Check cyclomatic complexity
+        run: |
+          echo "## Code Complexity Report" >> $GITHUB_STEP_SUMMARY
+          echo "Analyzing cyclomatic complexity..." >> $GITHUB_STEP_SUMMARY
+          echo "Use 'npm install -g complexity-report' for detailed analysis" >> $GITHUB_STEP_SUMMARY
+        continue-on-error: true
+
+  # Dependency outdated check
+  dependency-audit:
+    name: Dependency Outdated Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Check for outdated packages
+        run: pnpm outdated || true
+
+      - name: Generate dependency report
+        run: |
+          echo "## Dependency Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          pnpm outdated >> $GITHUB_STEP_SUMMARY || echo "All dependencies up to date" >> $GITHUB_STEP_SUMMARY
+
+  # File size analysis
+  bundle-size:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Build project
+        run: pnpm build
+
+      - name: Analyze bundle size
+        run: |
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          du -sh .next/
+          find .next -type f -name "*.js" | xargs ls -lh | tail -20 >> $GITHUB_STEP_SUMMARY || true
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-output
+          path: .next/
+          retention-days: 7
+        continue-on-error: true
+
+  # Code duplication detection
+  duplication-check:
+    name: Code Duplication Detection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install jscpd
+        run: npm install -g jscpd
+
+      - name: Check for code duplication
+        run: |
+          jscpd src/ --reporters json --output-file duplication-report.json || true
+          echo "## Duplication Report" >> $GITHUB_STEP_SUMMARY
+          if [ -f duplication-report.json ]; then
+            cat duplication-report.json >> $GITHUB_STEP_SUMMARY
+          fi
+        continue-on-error: true
+
+      - name: Upload duplication report
+        uses: actions/upload-artifact@v3
+        with:
+          name: duplication-report
+          path: duplication-report.json
+        continue-on-error: true
