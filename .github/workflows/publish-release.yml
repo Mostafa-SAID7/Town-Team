@@ -1,0 +1,185 @@
+name: Publish Release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.0)'
+        required: false
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  # Unified release management - consolidates release.yml + version-bump.yml
+  create-release:
+    name: Create Release & Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      changelog: ${{ steps.changelog.outputs.changelog }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Get current version
+        id: current-version
+        run: |
+          VERSION=$(grep '"version"' package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+
+      - name: Calculate next version
+        id: version
+        run: |
+          CURRENT_VERSION="${{ steps.current-version.outputs.version }}"
+          RELEASE_TYPE="${{ github.event.inputs.release_type || 'patch' }}"
+          
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          
+          case $RELEASE_TYPE in
+            major)
+              MAJOR=$((MAJOR + 1))
+              MINOR=0
+              PATCH=0
+              ;;
+            minor)
+              MINOR=$((MINOR + 1))
+              PATCH=0
+              ;;
+            patch|*)
+              PATCH=$((PATCH + 1))
+              ;;
+          esac
+          
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Previous version: $CURRENT_VERSION"
+          echo "New version: $NEW_VERSION"
+
+      - name: Generate changelog from commits
+        id: changelog
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "HEAD~0")
+          COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s" || git log -1 --pretty=format:"%s")
+          
+          {
+            echo 'changelog<<EOF'
+            echo "$COMMITS" | sed 's/^/- /'
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
+
+      - name: Update package.json version
+        run: |
+          npm version ${{ steps.version.outputs.version }} --no-git-tag-version
+          echo "Updated package.json to ${{ steps.version.outputs.version }}"
+
+      - name: Update CHANGELOG.md
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          DATE=$(date '+%Y-%m-%d')
+          
+          {
+            echo "## [$VERSION] - $DATE"
+            echo ""
+            echo "### Added"
+            echo "- New features"
+            echo ""
+            echo "### Fixed"
+            echo "- Bug fixes"
+            echo ""
+            echo "### Changed"
+            echo "- Changes"
+            echo ""
+            echo ""
+            cat CHANGELOG.md
+          } > CHANGELOG.md.tmp
+          
+          mv CHANGELOG.md.tmp CHANGELOG.md
+          echo "CHANGELOG.md updated"
+
+      - name: Commit version changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json CHANGELOG.md
+          git commit -m "chore(release): v${{ steps.version.outputs.version }}" || echo "No changes to commit"
+
+      - name: Create git tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git tag -a "v$VERSION" -m "Release version $VERSION"
+          echo "Created tag: v$VERSION"
+
+      - name: Push changes and tags
+        run: |
+          git push origin main || echo "No new commits to push"
+          git push origin --tags
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          release_name: v${{ steps.version.outputs.version }}
+          body: |
+            # Release v${{ steps.version.outputs.version }}
+            
+            ## Changes
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ## Installation
+            ```bash
+            git clone https://github.com/Mostafa-SAID7/Town-Team.git
+            cd Town-Team
+            git checkout v${{ steps.version.outputs.version }}
+            pnpm install
+            pnpm dev
+            ```
+            
+            ## Documentation
+            - [Getting Started](./docs/GETTING_STARTED.md)
+            - [Architecture](./docs/ARCHITECTURE.md)
+            - [Git Flow](./docs/GITFLOW.md)
+          draft: false
+          prerelease: false
+
+  release-summary:
+    name: Release Summary
+    runs-on: ubuntu-latest
+    if: success()
+    needs: [create-release]
+
+    steps:
+      - name: Print release summary
+        run: |
+          echo "## 🎉 Release Published" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** v${{ needs.create-release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Changes:**" >> $GITHUB_STEP_SUMMARY
+          echo "${{ needs.create-release.outputs.changelog }}" >> $GITHUB_STEP_SUMMARY

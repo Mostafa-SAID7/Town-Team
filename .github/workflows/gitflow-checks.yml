@@ -1,31 +1,30 @@
-name: Git Flow Checks
+name: Git Flow Validation
 
 on:
   pull_request:
     branches:
       - main
       - develop
-  push:
-    branches:
-      - main
-      - develop
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: read
 
 jobs:
   validate-branch-name:
     name: Validate Branch Name
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
       - name: Validate branch naming convention
         run: |
           BRANCH_NAME="${{ github.head_ref }}"
+          echo "Checking branch: $BRANCH_NAME"
           
           # Valid branch patterns
-          if [[ $BRANCH_NAME =~ ^(main|develop|feature|bugfix|release|hotfix|docs|chore|infra)\/?.* ]] || \
-             [[ $BRANCH_NAME == "main" ]] || \
-             [[ $BRANCH_NAME == "develop" ]]; then
-            echo "✓ Branch name '$BRANCH_NAME' is valid"
+          if [[ $BRANCH_NAME =~ ^(feature|bugfix|fix|hotfix|release|docs|chore|infra)/ ]]; then
+            echo "✓ Branch name '$BRANCH_NAME' follows Git Flow convention"
             exit 0
           else
             echo "✗ Branch name '$BRANCH_NAME' does not follow Git Flow conventions"
@@ -44,7 +43,6 @@ jobs:
   validate-merge-target:
     name: Validate Merge Target
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
       - name: Check merge target is correct
@@ -52,66 +50,44 @@ jobs:
           BRANCH_NAME="${{ github.head_ref }}"
           BASE_BRANCH="${{ github.base_ref }}"
           
+          echo "Branch: $BRANCH_NAME → Target: $BASE_BRANCH"
+          
           # Feature, bugfix, docs, chore, infra branches should merge to develop
-          if [[ $BRANCH_NAME =~ ^(feature|bugfix|docs|chore|infra)\/ ]]; then
+          if [[ $BRANCH_NAME =~ ^(feature|bugfix|docs|chore|infra)/ ]]; then
             if [[ $BASE_BRANCH != "develop" ]]; then
-              echo "✗ Branch '$BRANCH_NAME' should merge to 'develop', not '$BASE_BRANCH'"
+              echo "✗ '$BRANCH_NAME' should merge to 'develop', not '$BASE_BRANCH'"
               exit 1
             fi
+            echo "✓ Merge target is correct (develop)"
           fi
           
-          # Release branches should merge to main or develop
-          if [[ $BRANCH_NAME =~ ^release\/ ]]; then
+          # Release and hotfix branches should merge to main or develop
+          if [[ $BRANCH_NAME =~ ^(release|hotfix)/ ]]; then
             if [[ $BASE_BRANCH != "main" && $BASE_BRANCH != "develop" ]]; then
-              echo "✗ Branch '$BRANCH_NAME' should merge to 'main' or 'develop', not '$BASE_BRANCH'"
+              echo "✗ '$BRANCH_NAME' should merge to 'main' or 'develop', not '$BASE_BRANCH'"
               exit 1
             fi
+            echo "✓ Merge target is correct ($BASE_BRANCH)"
           fi
           
-          # Hotfix branches should merge to main or develop
-          if [[ $BRANCH_NAME =~ ^hotfix\/ ]]; then
-            if [[ $BASE_BRANCH != "main" && $BASE_BRANCH != "develop" ]]; then
-              echo "✗ Branch '$BRANCH_NAME' should merge to 'main' or 'develop', not '$BASE_BRANCH'"
-              exit 1
-            fi
-          fi
-          
-          echo "✓ Merge target '$BASE_BRANCH' is correct for branch '$BRANCH_NAME'"
           exit 0
 
   validate-pr-labels:
     name: Validate PR Labels
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
 
     steps:
       - name: Check PR has appropriate label
         run: |
-          LABELS="${{ join(github.event.pull_request.labels.*.name, ', ') }}"
-          
-          if [[ -z "$LABELS" ]]; then
-            echo "⚠ PR has no labels (optional)"
-          else
-            echo "✓ PR labels: $LABELS"
-          fi
-
-  branch-protection:
-    name: Branch Protection Check
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-
-    steps:
-      - name: Ensure main branch only receives release/hotfix merges
-        run: |
-          BASE_BRANCH="${{ github.base_ref }}"
           BRANCH_NAME="${{ github.head_ref }}"
+          echo "PR Branch: $BRANCH_NAME"
+          echo "Note: Labels are helpful but not required"
+          echo "Suggested labels based on branch:"
           
-          if [[ $BASE_BRANCH == "main" ]]; then
-            if ! [[ $BRANCH_NAME =~ ^(release|hotfix)\/ ]]; then
-              echo "✗ 'main' branch only accepts merges from release/* and hotfix/* branches"
-              echo "   Found: $BRANCH_NAME"
-              exit 1
-            fi
+          if [[ $BRANCH_NAME =~ ^feature/ ]]; then
+            echo "  - type: feature"
+          elif [[ $BRANCH_NAME =~ ^bugfix/ ]] || [[ $BRANCH_NAME =~ ^fix/ ]]; then
+            echo "  - type: bug"
+          elif [[ $BRANCH_NAME =~ ^docs/ ]]; then
+            echo "  - type: docs"
           fi
-          
-          echo "✓ Branch protection rules validated"
