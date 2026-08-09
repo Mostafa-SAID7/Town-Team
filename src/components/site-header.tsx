@@ -29,16 +29,19 @@ export function SiteHeader({ cart, wishlist, darkMode, onToggleTheme, onOpenSear
 
     const observer = new IntersectionObserver(
       (entries) => {
-        const visibleSections = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
+        let nextActive = activeSection
         
-        if (visibleSections.length > 0) {
-          const activeId = visibleSections[0].target.id
-          setActiveSection(`#${activeId}`)
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
+            nextActive = `#${entry.target.id}`
+          }
+        })
+        
+        if (nextActive !== activeSection) {
+          setActiveSection(nextActive)
         }
       },
-      { rootMargin: '-20% 0px -58% 0px', threshold: [0, 0.2, 0.5, 1] },
+      { rootMargin: '-80px 0px -66% 0px', threshold: [0.1, 0.5] },
     )
 
     sections.forEach(({ element }) => observer.observe(element))

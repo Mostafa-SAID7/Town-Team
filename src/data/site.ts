@@ -1,10 +1,10 @@
 export type Product = { name: string; type: string; price: string; badge: string; image: string }
 
 export const navigation = [
-  { label: 'Shop', href: '#shop' },
   { label: 'Collections', href: '#collections' },
-  { label: 'Style guide', href: '#story' },
-  { label: 'About', href: '#story' },
+  { label: 'Shop', href: '#shop' },
+  { label: 'Story', href: '#story' },
+  { label: 'Community', href: '#community' },
 ]
 
 export const images = {
