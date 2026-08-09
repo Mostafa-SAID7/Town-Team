@@ -1,3 +1,15 @@
+## [0.1.25] - 2026-08-09
+
+### Added
+- New features
+
+### Fixed
+- Bug fixes
+
+### Changed
+- Changes
+
+
 ## [0.1.24] - 2026-08-09
 
 ### Added
