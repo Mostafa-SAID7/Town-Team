@@ -107,7 +107,25 @@ button {
 }
 
 .dark-mode .site-header {
+  background: #1a1a1a;
+  border-bottom-color: #3a3530;
   color: var(--ink);
+}
+
+.dark-mode .site-header .desktop-nav a {
+  color: #e8e2d9;
+}
+
+.dark-mode .site-header .desktop-nav a:hover {
+  color: var(--rust);
+}
+
+.dark-mode .site-header .brand {
+  color: var(--ink);
+}
+
+.dark-mode .site-header .brand-mark {
+  color: var(--rust);
 }
 
 .dark-mode .hero-copy,
@@ -147,9 +165,24 @@ button {
   color: var(--cream);
 }
 
-.dark-mode .quotes img {
-  background: #2a2520;
-  border-color: #3a3530;
+.dark-mode .site-header .icon-button {
+  color: #e8e2d9;
+}
+
+.dark-mode .site-header .icon-button:hover {
+  background: rgba(232, 226, 217, 0.1);
+  color: var(--rust);
+}
+
+.dark-mode .site-header .cart-button {
+  background: var(--rust);
+  color: #111111;
+  border-color: var(--rust);
+}
+
+.dark-mode .site-header .cart-button:hover {
+  background: #e8a76a;
+  color: #111111;
 }
 
 .dark-mode .newsletter input {
@@ -159,6 +192,91 @@ button {
 
 .dark-mode .newsletter input::placeholder {
   color: var(--muted);
+}
+
+.dark-mode .story {
+  background: #1a1410;
+  color: #e8e2d9;
+  border-bottom-color: #3a3530;
+}
+
+.dark-mode .story h2 {
+  color: var(--ink);
+}
+
+.dark-mode .story-copy p {
+  color: #d6d0c6;
+}
+
+.dark-mode .story-copy .eyebrow {
+  color: var(--rust);
+}
+
+.dark-mode .section-heading .eyebrow {
+  color: var(--rust);
+}
+
+.dark-mode .section-heading h2 {
+  color: var(--ink);
+}
+
+.dark-mode .season {
+  color: var(--rust);
+}
+
+.dark-mode .product-type {
+  color: var(--rust);
+}
+
+.dark-mode .product-card h3 {
+  color: var(--ink);
+}
+
+.dark-mode .price {
+  color: #d6d0c6;
+}
+
+.dark-mode .add-button {
+  border-bottom-color: #e8e2d9;
+  color: var(--ink);
+}
+
+.dark-mode .add-button:hover {
+  border-bottom-color: var(--rust);
+  color: var(--rust);
+}
+
+.dark-mode .quotes p {
+  color: #d6d0c6;
+}
+
+.dark-mode .quotes small {
+  color: var(--muted);
+}
+
+.dark-mode .ticker {
+  background: #1a1a1a;
+  color: var(--rust);
+  border-top: 1px solid #3a3530;
+  border-bottom: 1px solid #3a3530;
+}
+
+.dark-mode footer {
+  background: #111111;
+  border-top-color: #3a3530;
+}
+
+.dark-mode footer strong {
+  color: var(--rust);
+}
+
+.dark-mode footer a {
+  color: #a0a0a0;
+  transition: color 0.2s ease;
+}
+
+.dark-mode footer a:hover {
+  color: var(--rust);
 }
 
 /* ============================================================================
