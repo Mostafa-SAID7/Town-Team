@@ -11,10 +11,6 @@ on:
       - '.github/workflows/code-quality.yml'
       - '.github/workflows/security-scanning.yml'
   workflow_dispatch:
-
-concurrency:
-  group: release
-  cancel-in-progress: true
     inputs:
       version:
         description: 'Version to release (e.g., 1.0.0)'
@@ -28,6 +24,10 @@ concurrency:
           - major
           - minor
           - patch
+
+concurrency:
+  group: release
+  cancel-in-progress: true
 
 permissions:
   contents: write
