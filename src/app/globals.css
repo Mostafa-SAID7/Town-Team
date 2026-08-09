@@ -22,6 +22,11 @@
   --input: #6b655b;
   --ring: #9a4324;
   --radius: 0.75rem;
+  --scrollbar-track: var(--background);
+  --scrollbar-thumb: var(--primary);
+  --scrollbar-thumb-hover: var(--accent);
+  --scrollbar-thumb-active: var(--ring);
+  --scrollbar-thumb-border: var(--background);
   color-scheme: light;
 }
 
@@ -44,6 +49,11 @@
   --border: #c9c0b2;
   --input: #a79f92;
   --ring: #f08a5d;
+  --scrollbar-track: var(--background);
+  --scrollbar-thumb: var(--primary);
+  --scrollbar-thumb-hover: var(--accent);
+  --scrollbar-thumb-active: var(--ring);
+  --scrollbar-thumb-border: var(--background);
   color-scheme: dark;
 }
 
@@ -71,11 +81,9 @@
 }
 
 * { box-sizing: border-box; }
-html { 
-  scroll-behavior: smooth; 
+html {
+  scroll-behavior: smooth;
   background: var(--background);
-  scrollbar-color: var(--primary) var(--background);
-  scrollbar-width: thin;
 }
 body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-geist), sans-serif; }
 button, a, input { font: inherit; }
@@ -86,7 +94,7 @@ button, a, input, textarea, select { transition: color 180ms ease, background-co
 html,
 body,
 .site-shell {
-  scrollbar-color: var(--primary) var(--background);
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   scrollbar-width: thin;
 }
 
@@ -101,34 +109,25 @@ body,
   height: 0;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--background);
-}
-
-::-webkit-scrollbar-track-piece {
-  background: var(--background);
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
   min-height: 42px;
-  background: var(--primary);
-  border: 3px solid var(--background);
+  background: var(--scrollbar-thumb);
+  border: 3px solid var(--scrollbar-thumb-border);
   border-radius: 999px;
   transition: background-color 180ms ease, border-color 180ms ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--accent);
-  border-color: var(--muted);
+  background: var(--scrollbar-thumb-hover);
 }
 
 ::-webkit-scrollbar-thumb:active {
-  background: var(--ring);
-  border-color: var(--muted);
-}
-
-::-webkit-scrollbar-corner {
-  background: var(--background);
+  background: var(--scrollbar-thumb-active);
 }
 
 .site-shell { min-height: 100vh; overflow-x: clip; background: var(--background); color: var(--foreground); transition: background-color 420ms ease, color 420ms ease; }
