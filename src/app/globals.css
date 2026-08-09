@@ -71,11 +71,47 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; background: var(--background); }
+html { 
+  scroll-behavior: smooth; 
+  background: var(--background);
+  scrollbar-color: var(--primary) transparent;
+  scrollbar-width: thin;
+}
 body { margin: 0; background: var(--background); color: var(--foreground); font-family: var(--font-geist), sans-serif; }
 button, a, input { font: inherit; }
 button, a, input, textarea, select { transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease, transform 180ms ease; }
 :focus-visible { outline: 3px solid var(--ring); outline-offset: 3px; }
+
+/* Webkit Scrollbar Styling - Light Mode */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 8px;
+  border: 2px solid var(--background);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+  border-color: var(--muted);
+}
+
+/* Dark Mode Scrollbar */
+.dark-mode ::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-color: var(--background);
+}
+
+.dark-mode ::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+  border-color: var(--card);
+}
 
 .site-shell { min-height: 100vh; overflow-x: clip; background: var(--background); color: var(--foreground); transition: background-color 420ms ease, color 420ms ease; }
 .site-shell .bg-background { background-color: var(--background) !important; }
