@@ -1,0 +1,80 @@
+name: Feature Merged - Track & Label
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - develop
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  categorize-merge:
+    name: Categorize Merged PR
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get PR branch name
+        id: branch-info
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          
+          # Determine PR type
+          if [[ $BRANCH_NAME =~ ^feature\/ ]]; then
+            echo "type=feature" >> $GITHUB_OUTPUT
+            echo "label=type: feature" >> $GITHUB_OUTPUT
+          elif [[ $BRANCH_NAME =~ ^bugfix\/ ]]; then
+            echo "type=bugfix" >> $GITHUB_OUTPUT
+            echo "label=type: bugfix" >> $GITHUB_OUTPUT
+          elif [[ $BRANCH_NAME =~ ^fix\/ ]]; then
+            echo "type=fix" >> $GITHUB_OUTPUT
+            echo "label=type: fix" >> $GITHUB_OUTPUT
+          elif [[ $BRANCH_NAME =~ ^hotfix\/ ]]; then
+            echo "type=hotfix" >> $GITHUB_OUTPUT
+            echo "label=type: hotfix" >> $GITHUB_OUTPUT
+          elif [[ $BRANCH_NAME =~ ^docs\/ ]]; then
+            echo "type=docs" >> $GITHUB_OUTPUT
+            echo "label=type: docs" >> $GITHUB_OUTPUT
+          elif [[ $BRANCH_NAME =~ ^chore\/ ]]; then
+            echo "type=chore" >> $GITHUB_OUTPUT
+            echo "label=type: chore" >> $GITHUB_OUTPUT
+          else
+            echo "type=other" >> $GITHUB_OUTPUT
+            echo "label=type: other" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Add label to PR
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const label = "${{ steps.branch-info.outputs.label }}";
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [label]
+            });
+
+      - name: Close feature branch
+        run: |
+          echo "Feature branch: ${{ steps.branch-info.outputs.branch }}"
+          echo "Type: ${{ steps.branch-info.outputs.type }}"
+
+      - name: Create merge summary
+        run: |
+          echo "## Merge Summary ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**PR:** #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ steps.branch-info.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Type:** ${{ steps.branch-info.outputs.type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Title:** ${{ github.event.pull_request.title }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Merged By:** ${{ github.event.pull_request.merged_by.login }}" >> $GITHUB_STEP_SUMMARY

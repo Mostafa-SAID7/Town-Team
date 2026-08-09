@@ -1,0 +1,80 @@
+name: Version Bump - Semantic Versioning
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  analyze-changes:
+    name: Analyze Changes & Bump Version
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    outputs:
+      bump_type: ${{ steps.determine-bump.outputs.bump_type }}
+      new_version: ${{ steps.determine-bump.outputs.new_version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get commit messages since last release
+        id: commits
+        run: |
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "HEAD~0")
+          COMMITS=$(git log $LAST_TAG..HEAD --pretty=format:"%s" || git log -1 --pretty=format:"%s")
+          echo "commits<<EOF" >> $GITHUB_OUTPUT
+          echo "$COMMITS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Determine version bump
+        id: determine-bump
+        run: |
+          COMMITS="${{ steps.commits.outputs.commits }}"
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          
+          # Get current version
+          CURRENT_VERSION=$(grep '"version"' package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | xargs)
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+          
+          # Determine bump type from commits
+          if echo "$COMMITS" | grep -qi "BREAKING CHANGE\|^breaking"; then
+            BUMP_TYPE="major"
+            MAJOR=$((MAJOR + 1))
+            MINOR=0
+            PATCH=0
+          elif echo "$COMMITS" | grep -qi "^feat"; then
+            BUMP_TYPE="minor"
+            MINOR=$((MINOR + 1))
+            PATCH=0
+          elif echo "$COMMITS" | grep -qi "^fix\|^bugfix"; then
+            BUMP_TYPE="patch"
+            PATCH=$((PATCH + 1))
+          else
+            BUMP_TYPE="patch"
+            PATCH=$((PATCH + 1))
+          fi
+          
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          
+          echo "bump_type=$BUMP_TYPE" >> $GITHUB_OUTPUT
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo ""
+          echo "Current version: $CURRENT_VERSION"
+          echo "Bump type: $BUMP_TYPE"
+          echo "New version: $NEW_VERSION"
+
+      - name: Create release notes
+        run: |
+          echo "## Release Notes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Current Version:** $(grep '\"version\"' package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g')" >> $GITHUB_STEP_SUMMARY
+          echo "**New Version:** ${{ steps.determine-bump.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Bump Type:** ${{ steps.determine-bump.outputs.bump_type }}" >> $GITHUB_STEP_SUMMARY

@@ -1,0 +1,121 @@
+name: Bug Report - Auto Label & Track
+
+on:
+  issues:
+    types: [opened, reopened]
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  detect-bug:
+    name: Detect & Label Bug Reports
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if bug report
+        id: is-bug
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            if (context.eventName === 'issues') {
+              const issue = context.payload.issue;
+              const title = issue.title.toLowerCase();
+              const body = issue.body.toLowerCase();
+              
+              // Bug keywords
+              const bugKeywords = ['bug', 'error', 'issue', 'broken', 'crash', 'fail', 'not working', 'doesn\'t work'];
+              const isBug = bugKeywords.some(keyword => 
+                title.includes(keyword) || body.includes(keyword)
+              );
+              
+              if (isBug) {
+                console.log('Bug detected');
+                core.setOutput('is_bug', 'true');
+              }
+            }
+
+      - name: Label bug issue
+        if: steps.is-bug.outputs.is_bug == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['type: bug', 'priority: medium']
+            });
+
+      - name: Detect bug in PR title
+        id: pr-bug
+        uses: actions/github-script@v6
+        if: github.event_name == 'pull_request'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+            const branch = pr.head.ref;
+            const title = pr.title.toLowerCase();
+            
+            // Check for bug/fix in branch name and title
+            if (branch.startsWith('bugfix/') || branch.startsWith('fix/') || 
+                title.includes('fix') || title.includes('bug')) {
+              core.setOutput('is_bug_fix', 'true');
+            }
+
+      - name: Label bug fix PR
+        if: steps.pr-bug.outputs.is_bug_fix == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['type: bug', 'status: in-progress']
+            });
+
+  track-bug:
+    name: Track Bug Progress
+    runs-on: ubuntu-latest
+    if: github.event_name == 'issues'
+
+    steps:
+      - name: Create bug tracking comment
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issueNumber = context.issue.number;
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber,
+              body: `## 🐛 Bug Report Received
+
+Thank you for reporting this bug! We'll investigate and fix it as soon as possible.
+
+### Next Steps:
+1. A developer will review this issue
+2. We'll assign it to someone and update the status
+3. A fix will be created in a bugfix branch
+4. The fix will be tested and merged
+
+### Tracking:
+- Issue: #${issueNumber}
+- Status: Open
+- Priority: To be determined
+
+**Please provide any additional information that helps us reproduce the issue.**`
+            });
