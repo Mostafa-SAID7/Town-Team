@@ -31,8 +31,7 @@ jobs:
               const title = issue.title.toLowerCase();
               const body = issue.body.toLowerCase();
               
-              // Bug keywords
-              const bugKeywords = ['bug', 'error', 'issue', 'broken', 'crash', 'fail', 'not working', 'doesn\'t work'];
+              const bugKeywords = ['bug', 'error', 'issue', 'broken', 'crash', 'fail', 'not working'];
               const isBug = bugKeywords.some(keyword => 
                 title.includes(keyword) || body.includes(keyword)
               );
@@ -67,7 +66,6 @@ jobs:
             const branch = pr.head.ref;
             const title = pr.title.toLowerCase();
             
-            // Check for bug/fix in branch name and title
             if (branch.startsWith('bugfix/') || branch.startsWith('fix/') || 
                 title.includes('fix') || title.includes('bug')) {
               core.setOutput('is_bug_fix', 'true');
@@ -98,24 +96,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const issueNumber = context.issue.number;
+            const comment = "## Bug Report Received\n\nThank you for reporting this bug! We'll investigate and fix it as soon as possible.\n\n### Next Steps:\n1. A developer will review this issue\n2. We'll assign it and update the status\n3. A fix will be created in a bugfix branch\n4. The fix will be tested and merged\n\n### Tracking:\n- Issue: #" + issueNumber + "\n- Status: Open\n- Priority: To be determined\n\nPlease provide any additional information that helps us reproduce the issue.";
+            
             github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: issueNumber,
-              body: `## 🐛 Bug Report Received
-
-Thank you for reporting this bug! We'll investigate and fix it as soon as possible.
-
-### Next Steps:
-1. A developer will review this issue
-2. We'll assign it to someone and update the status
-3. A fix will be created in a bugfix branch
-4. The fix will be tested and merged
-
-### Tracking:
-- Issue: #${issueNumber}
-- Status: Open
-- Priority: To be determined
-
-**Please provide any additional information that helps us reproduce the issue.**`
+              body: comment
             });
