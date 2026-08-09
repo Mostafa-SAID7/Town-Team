@@ -26,25 +26,25 @@
 }
 
 .dark-mode {
-  --background: #f4f0e6;
-  --foreground: #111111;
-  --card: #faf7ef;
-  --card-foreground: #111111;
-  --popover: #faf7ef;
-  --popover-foreground: #111111;
-  --primary: #a94f2a;
-  --primary-foreground: #fffaf0;
-  --secondary: #e7e0cf;
-  --secondary-foreground: #111111;
-  --muted: #e7e0cf;
-  --muted-foreground: #655d52;
-  --accent: #a94f2a;
-  --accent-foreground: #fffaf0;
-  --destructive: #9f2f21;
-  --border: #171717;
-  --input: #171717;
-  --ring: #a94f2a;
-  color-scheme: light;
+  --background: #171717;
+  --foreground: #f4f0e6;
+  --card: #242321;
+  --card-foreground: #f4f0e6;
+  --popover: #242321;
+  --popover-foreground: #f4f0e6;
+  --primary: #d77a4f;
+  --primary-foreground: #171717;
+  --secondary: #34312b;
+  --secondary-foreground: #f4f0e6;
+  --muted: #34312b;
+  --muted-foreground: #c5bba9;
+  --accent: #d77a4f;
+  --accent-foreground: #171717;
+  --destructive: #e06c5c;
+  --border: #f4f0e6;
+  --input: #f4f0e6;
+  --ring: #d77a4f;
+  color-scheme: dark;
 }
 
 @theme inline {
