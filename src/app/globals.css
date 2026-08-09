@@ -26,24 +26,25 @@
 }
 
 .dark-mode {
-  --background: #111827;
-  --foreground: #f7f5ef;
-  --card: #1c2735;
-  --card-foreground: #f7f5ef;
-  --popover: #1c2735;
-  --popover-foreground: #f7f5ef;
-  --primary: #f48368;
-  --primary-foreground: #111827;
-  --secondary: #263445;
-  --secondary-foreground: #f7f5ef;
-  --muted: #263445;
-  --muted-foreground: #aab6c2;
-  --accent: #f48368;
-  --accent-foreground: #111827;
-  --border: #344355;
-  --input: #344355;
-  --ring: #f48368;
-  color-scheme: dark;
+  --background: #f4f0e6;
+  --foreground: #111111;
+  --card: #faf7ef;
+  --card-foreground: #111111;
+  --popover: #faf7ef;
+  --popover-foreground: #111111;
+  --primary: #a94f2a;
+  --primary-foreground: #fffaf0;
+  --secondary: #e7e0cf;
+  --secondary-foreground: #111111;
+  --muted: #e7e0cf;
+  --muted-foreground: #655d52;
+  --accent: #a94f2a;
+  --accent-foreground: #fffaf0;
+  --destructive: #9f2f21;
+  --border: #171717;
+  --input: #171717;
+  --ring: #a94f2a;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -78,7 +79,9 @@ button, a, input { font: inherit; }
 .site-shell h1, .site-shell h2, .site-shell h3, .site-shell strong, .site-shell b { font-family: var(--font-display), Impact, sans-serif !important; letter-spacing: -0.02em; }
 .site-shell header { min-height: 4.1rem; border-color: #111 !important; }
 .site-shell #top > div { max-width: none; min-height: 60rem; gap: 0; padding: 0; grid-template-columns: 1fr 1fr; align-items: stretch; }
-.site-shell #top > div > div:first-child { justify-content: center; padding: 5rem 5.2rem; }
+.site-shell #top > div > div:first-child { justify-content: flex-start; padding: 7rem 5.2rem; }
+.site-shell #top > div > div:first-child > p:first-child { color: #766f64 !important; }
+.site-shell button, .site-shell header a, .site-shell footer b, .site-shell footer strong { font-family: var(--font-display), Impact, sans-serif !important; }
 .site-shell #top > div > div:last-child { border-left: 1px solid #111; border-radius: 0; background: var(--secondary); padding: 2rem; }
 .site-shell #top h1 { max-width: 32rem; font-size: clamp(6rem, 8vw, 9.2rem); line-height: .86; }
 .site-shell #top .flex.flex-col.items-start > .inline-flex { width: 100%; justify-content: center; }

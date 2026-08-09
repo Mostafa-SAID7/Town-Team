@@ -29,9 +29,9 @@ export function HomeExperience() {
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-16 lg:grid-cols-[1fr_0.85fr] lg:px-8 lg:py-24">
           <div className="flex flex-col items-start gap-7">
             <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-primary">Est. 2018 <span className="mx-2 text-muted-foreground">/</span> Cairo, Egypt</p>
-            <h1 className="max-w-3xl font-mono text-5xl font-black uppercase leading-[0.92] tracking-[-0.06em] text-balance sm:text-7xl lg:text-8xl">Cairo streets / where style begins</h1>
+            <h1 className="max-w-3xl font-mono text-5xl font-black uppercase leading-[0.92] tracking-[-0.06em] text-balance sm:text-7xl lg:text-8xl">Cairo<br />streets /<br />where style<br />begins</h1>
             <p className="max-w-md text-base leading-relaxed text-muted-foreground">Egyptian streetwear born from the energy of Cairo. Made for dreamers, built for the streets.</p>
-            <Button size="lg" nativeButton={false} render={<Link href="#collections" />}>Shop the drop <ArrowRight data-icon="inline-end" /></Button>
+            <Button size="lg" onClick={() => document.getElementById('collections')?.scrollIntoView({ behavior: 'smooth' })}>Shop the drop <ArrowRight data-icon="inline-end" /></Button>
           </div>
           <div className="relative overflow-hidden rounded-xl border border-border bg-card p-3 shadow-sm">
             <Image src={images.hero} alt="Illustrated Egyptian man walking through a Cairo street" width={900} height={1100} priority className="aspect-[4/5] w-full object-cover" />
