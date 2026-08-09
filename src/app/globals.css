@@ -158,11 +158,13 @@ body,
 .motion-ticker { animation: ticker-slide 28s linear infinite; width: max-content; }
 .motion-overlay { animation: overlay-fade 240ms ease both; }
 .motion-drawer { animation: drawer-slide 420ms cubic-bezier(.22, 1, .36, 1) both; }
+.motion-modal { animation: modal-scale 420ms cubic-bezier(.22, 1, .36, 1) both; }
 .motion-menu { animation: menu-drop 300ms cubic-bezier(.22, 1, .36, 1) both; transform-origin: top; }
 @keyframes page-enter { from { opacity: 0; } to { opacity: 1; } }
 @keyframes reveal-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes overlay-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes drawer-slide { from { opacity: .7; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes modal-scale { from { opacity: 0; transform: scale(.92) translateY(-20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
 @keyframes menu-drop { from { opacity: 0; transform: translateY(-10px) scaleY(.98); } to { opacity: 1; transform: translateY(0) scaleY(1); } }
 @keyframes ticker-slide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .site-loading { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; background: var(--background); color: var(--foreground); }
