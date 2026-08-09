@@ -18,10 +18,17 @@ export function HomeExperience() {
   const [email, setEmail] = useState('')
   const [joined, setJoined] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
+  const [themeSwitching, setThemeSwitching] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [overlay, setOverlay] = useState<'search' | 'wishlist' | 'cart' | null>(null)
   const [query, setQuery] = useState('')
 
-  useEffect(() => { setDarkMode(window.localStorage.getItem('town-team-theme') === 'dark') }, [])
+  useEffect(() => {
+    const savedTheme = window.localStorage.getItem('town-team-theme')
+    setDarkMode(savedTheme ? savedTheme === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches)
+    const timer = window.setTimeout(() => setIsLoading(false), 650)
+    return () => window.clearTimeout(timer)
+  }, [])
   useEffect(() => { window.localStorage.setItem('town-team-theme', darkMode ? 'dark' : 'light') }, [darkMode])
   useEffect(() => { document.body.style.overflow = overlay ? 'hidden' : ''; return () => { document.body.style.overflow = '' } }, [overlay])
 
@@ -30,10 +37,20 @@ export function HomeExperience() {
   const toggleLiked = (index: number) => setLiked((current) => current.includes(index) ? current.filter((item) => item !== index) : [...current, index])
   const removeCartItem = (index: number) => setCart((current) => { const position = current.indexOf(index); return position < 0 ? current : current.filter((_, itemPosition) => itemPosition !== position) })
   const closeOverlay = () => setOverlay(null)
+  const toggleTheme = () => {
+    setThemeSwitching(true)
+    setDarkMode((current) => !current)
+    window.setTimeout(() => setThemeSwitching(false), 460)
+  }
+
+  if (isLoading) {
+    return <div className="site-loading" role="status" aria-label="Loading Town Team"><div className="site-loading__mark"><span className="site-loading__diamond" aria-hidden="true">◆</span><span className="site-loading__label">Town Team / Cairo</span></div></div>
+  }
 
   return (
-    <main className={darkMode ? 'site-shell dark-mode' : 'site-shell'}>
-      <SiteHeader cart={cart.length} wishlist={liked.length} darkMode={darkMode} onToggleTheme={() => setDarkMode((current) => !current)} onOpenSearch={() => setOverlay('search')} onOpenWishlist={() => setOverlay('wishlist')} onOpenCart={() => setOverlay('cart')} />
+    <main className={`${darkMode ? 'site-shell dark-mode' : 'site-shell'}${themeSwitching ? ' theme-switching' : ''}`}>
+      <div className="sr-only" aria-live="polite">{darkMode ? 'Dark mode enabled' : 'Light mode enabled'}</div>
+      <SiteHeader cart={cart.length} wishlist={liked.length} darkMode={darkMode} onToggleTheme={toggleTheme} onOpenSearch={() => setOverlay('search')} onOpenWishlist={() => setOverlay('wishlist')} onOpenCart={() => setOverlay('cart')} />
       <section id="top" className="border-b border-border"><div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-16 lg:grid-cols-[1fr_0.85fr] lg:px-8 lg:py-24"><div className="flex flex-col items-start gap-7"><p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-primary">Est. 2018 <span className="mx-2 text-muted-foreground">/</span> Cairo, Egypt</p><h1 className="max-w-3xl font-mono text-5xl font-black uppercase leading-[0.92] tracking-[-0.06em] text-balance sm:text-7xl lg:text-8xl">Cairo<br />streets /<br />where style<br />begins</h1><p className="max-w-md text-base leading-relaxed text-muted-foreground">Egyptian streetwear born from the energy of Cairo. Made for dreamers, built for the streets.</p><Button size="lg" onClick={() => document.getElementById('collections')?.scrollIntoView({ behavior: 'smooth' })}>Shop the drop <ArrowRight data-icon="inline-end" /></Button></div><div className="relative overflow-hidden rounded-xl border border-border bg-card p-3 shadow-sm"><Image src={images.hero} alt="Illustrated Egyptian man walking through a Cairo street" width={900} height={1100} priority className="aspect-[4/5] w-full object-cover" /></div></div></section>
       <section id="collections" className="mx-auto flex max-w-7xl flex-col gap-10 px-5 py-16 lg:px-8 lg:py-24"><div className="flex items-end justify-between gap-6"><div><p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-primary">Collection</p><h2 className="mt-3 font-mono text-4xl font-black uppercase tracking-[-0.05em] sm:text-6xl">The current drop</h2></div><span className="font-mono text-sm font-bold text-muted-foreground">SS24</span></div><div id="shop" className="grid gap-6 md:grid-cols-3">{products.map((product, index) => <Card key={product.name} className="group overflow-hidden rounded-xl border-border bg-card py-0 shadow-none"><div className="relative bg-muted p-3"><Badge className="absolute left-6 top-6 z-10" variant="secondary">{product.badge}</Badge><Button variant="secondary" size="icon" className="absolute right-6 top-6 z-10 rounded-full" aria-label={`${liked.includes(index) ? 'Remove' : 'Add'} ${product.name} ${liked.includes(index) ? 'from' : 'to'} wishlist`} onClick={() => toggleLiked(index)}><Heart className={liked.includes(index) ? 'fill-primary text-primary' : ''} /></Button><Image src={product.image} alt={`${product.name} illustrated product`} width={700} height={850} className="aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]" /></div><CardContent className="flex flex-col gap-2 p-5"><p className="font-mono text-xs font-bold uppercase tracking-[0.16em] text-primary">{product.type}</p><h3 className="font-mono text-2xl font-bold uppercase tracking-[-0.03em]">{product.name}</h3><p className="text-sm text-muted-foreground">{product.price}</p><Button variant="link" className="mt-2 w-fit px-0 uppercase" onClick={() => addToCart(index)}>Shop now <ArrowRight data-icon="inline-end" /></Button></CardContent></Card>)}</div></section>
       <section id="story" className="bg-foreground text-background"><div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-16 lg:grid-cols-2 lg:px-8 lg:py-24"><div className="overflow-hidden rounded-xl bg-muted p-3"><Image src={images.story} alt="Open sketchbook, coffee and glasses on a desk" width={1000} height={800} className="aspect-[5/4] w-full object-cover" /></div><div className="flex flex-col gap-6"><p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-primary">Our story <span className="ml-2">/</span></p><h2 className="font-mono text-4xl font-black uppercase leading-none tracking-[-0.05em] sm:text-6xl">Built in Cairo.<br />Worn everywhere.</h2><p className="max-w-lg leading-relaxed text-background/70">TOWN TEAM started in 2018 in the heart of Cairo with a simple belief: style should tell your story. We design for the streets we grew up on, blending Egyptian heritage with modern edge. From Downtown to the world — we rep our city, every day.</p><span className="font-mono text-7xl font-black text-primary">2018</span></div></div></section>
