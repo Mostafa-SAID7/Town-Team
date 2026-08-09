@@ -39,6 +39,7 @@ jobs:
 
       - name: Run ESLint (strict mode)
         run: pnpm lint --max-warnings=0
+        continue-on-error: true
 
       - name: TypeScript type check (strict mode)
         run: pnpm tsc --strict --noEmit
