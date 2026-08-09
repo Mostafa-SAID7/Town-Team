@@ -21,9 +21,9 @@ export function SiteHeader({ cart, wishlist, darkMode, onToggleTheme, onOpenSear
   const [activeSection, setActiveSection] = useState('#top')
 
   useEffect(() => {
-    const sections = [...new Set(navigation.map((item) => item.href))]
-      .map((href) => document.querySelector(href))
-      .filter((section): section is Element => Boolean(section))
+    const sections = navigation
+      .map((item) => ({ href: item.href, element: document.querySelector(item.href) }))
+      .filter((item): item is { href: string; element: Element } => Boolean(item.element))
 
     if (!sections.length) return
 
@@ -32,12 +32,16 @@ export function SiteHeader({ cart, wishlist, darkMode, onToggleTheme, onOpenSear
         const visibleSections = entries
           .filter((entry) => entry.isIntersecting)
           .sort((a, b) => b.intersectionRatio - a.intersectionRatio)
-        if (visibleSections[0]?.target.id) setActiveSection(`#${visibleSections[0].target.id}`)
+        
+        if (visibleSections.length > 0) {
+          const activeId = visibleSections[0].target.id
+          setActiveSection(`#${activeId}`)
+        }
       },
       { rootMargin: '-20% 0px -58% 0px', threshold: [0, 0.2, 0.5, 1] },
     )
 
-    sections.forEach((section) => observer.observe(section))
+    sections.forEach(({ element }) => observer.observe(element))
     return () => observer.disconnect()
   }, [])
 
@@ -55,7 +59,7 @@ export function SiteHeader({ cart, wishlist, darkMode, onToggleTheme, onOpenSear
           <span className="mr-1 text-primary sm:mr-2">◆</span>Town Team
         </Link>
         <nav className="hidden items-center gap-8 text-xs font-semibold uppercase tracking-[0.16em] md:flex" aria-label="Main navigation">
-          {navigation.map((item) => { const isActive = activeSection === item.href; return <Link key={item.label} href={item.href} aria-current={isActive ? 'location' : undefined} className={`relative transition-colors hover:text-primary${isActive ? ' text-primary after:absolute after:-bottom-2 after:left-0 after:right-0 after:h-0.5 after:bg-primary' : ''}`}>{item.label}</Link> })}
+          {navigation.map((item) => { const isActive = activeSection === item.href; return <Link key={item.label} href={item.href} aria-current={isActive ? 'location' : undefined} className={`relative transition-colors${isActive ? ' text-primary' : ' text-background hover:text-primary'}`}>{item.label}{isActive && <span className="absolute -bottom-2 left-0 right-0 h-0.5 bg-primary" aria-hidden="true" />}</Link> })}
         </nav>
         <div className="flex items-center gap-0.5 sm:gap-1">
           <div className="hidden items-center gap-0.5 sm:flex">
